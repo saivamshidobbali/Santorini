@@ -3,8 +3,6 @@
 (require json)
 (require racket/hash)
 
-(define initial_board (read-json))
-
 (define (feasible space-list token new-loc player-list)
   (let* ([row (list-ref new-loc 0)]
          [col (list-ref new-loc 1)]
@@ -101,19 +99,24 @@
     hash_map))
 
 (define (play board)
-  (let*  ([player-list (hash-ref board 'players)])
-    (cond
-      [(equal? (length player-list) 0)  (list (list (list 0 0) (list 0 1)))]
-      [(equal? (length player-list) 1) (append player-list (list (list (list 3 3) (list 3 2))))]
-      [else (make-move space-list player-list (+ turn 1))])))
+  (cond
+    [(and (list? board) (equal? (length board) 0))  (list (list (list 0 0) (list 0 1)))]
+    [(and (list? board) (equal? (length board) 1)) (append board (list (list (list 3 3) (list 3 2))))]
+    [(and (list? board) (equal? (length board) 2)) (hash 'turn 0
+                                                         'players board
+                                                         'spaces (list
+                                                                  (list 0 0 0 0 0)
+                                                                  (list 0 0 0 0 0)
+                                                                  (list 0 0 0 0 0)
+                                                                  (list 0 0 0 0 0)
+                                                                  (list 0 0 0 0 0)))]
+      [else (make-move (hash-ref board 'spaces) (hash-ref board 'players) (+ (hash-ref board 'turn) 1))]))
 
 		
-(define (func board)
-  (flush-output)
-  (let* ([mp (play board)])
-    (if (list? mp)
-        mp
-        (write-json (hash-set mp 'players (list (list-ref (hash-ref mp 'players) 1) (list-ref (hash-ref mp 'players) 0)))))
-    (func (read-json))))
+(define (func)
+  (let* ([mp (play (read-json) )])
+        (write-json mp)
+        (flush-output))
+  (func))
 
-(func initial_board)
+(func)
